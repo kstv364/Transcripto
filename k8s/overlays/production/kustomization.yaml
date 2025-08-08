@@ -1,0 +1,32 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: transcripter
+
+resources:
+- ../../base
+
+patchesStrategicMerge:
+- production-patches.yaml
+
+images:
+- name: transcripter
+  newName: registry.digitalocean.com/your-registry/transcripter
+  newTag: latest
+
+configMapGenerator:
+- name: transcripter-config
+  behavior: merge
+  literals:
+  - LOG_LEVEL=INFO
+  - MAX_CONCURRENT_REQUESTS=5
+  - REQUEST_TIMEOUT=600
+
+replicas:
+- name: transcripter-app
+  count: 3
+- name: ollama
+  count: 1
+
+commonLabels:
+  environment: production

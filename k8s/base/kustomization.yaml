@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- storage.yaml
+- ollama.yaml
+- transcripter.yaml
+- model-init-job.yaml
+- ingress.yaml
+
+commonLabels:
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: "kustomize"

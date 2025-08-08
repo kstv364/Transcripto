@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-model-init
+  namespace: transcripter
+  labels:
+    app.kubernetes.io/name: ollama-init
+    app.kubernetes.io/component: ml-setup
+    app.kubernetes.io/part-of: transcripter
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ollama-init
+        app.kubernetes.io/component: ml-setup
+        app.kubernetes.io/part-of: transcripter
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: model-init
+        image: ollama/ollama:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for Ollama service to be ready..."
+          until curl -f http://ollama-service:11434/api/tags; do
+            echo "Waiting for Ollama..."
+            sleep 10
+          done
+          echo "Ollama is ready. Pulling llama3 model..."
+          OLLAMA_HOST=http://ollama-service:11434 ollama pull llama3
+          echo "Model initialization complete!"
+        env:
+        - name: OLLAMA_HOST
+          value: "http://ollama-service:11434"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"
+      initContainers:
+      - name: wait-for-ollama
+        image: curlimages/curl:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for Ollama service..."
+          until curl -f http://ollama-service:11434/api/tags; do
+            echo "Ollama not ready, waiting..."
+            sleep 10
+          done
+          echo "Ollama is ready!"
