@@ -1,11 +1,16 @@
 import gradio as gr
 import tempfile
 import os
+import logging
 from typing import Optional, Tuple, Dict, Any
 import json
 
 from ..core.summarizer import TranscriptSummarizer, SummarizationResult
 from ..utils.config import Config
+
+# Set up logging for debugging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 def create_gradio_interface(config: Config) -> gr.Interface:
     """
@@ -43,21 +48,13 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             return "", "", "❌ Please upload a VTT file."
         
         try:
-            # Update summarizer configuration
-            summarizer.config.chunk_size = chunk_size
-            summarizer.config.chunk_overlap = chunk_overlap
-            summarizer.config.temperature = temperature
-            
-            # Recreate chunker with new settings
-            from ..core.chunker import TextChunker
-            summarizer.chunker = TextChunker(
-                chunk_size=chunk_size,
-                overlap_size=chunk_overlap
-            )
+            logger.info("🎬 GRADIO DEBUG: Starting VTT file processing")
+            logger.info(f"🔧 GRADIO CONFIG DEBUG: Received from UI - chunk_size={chunk_size}, chunk_overlap={chunk_overlap}, temperature={temperature}")
             
             # Read file content
             if hasattr(file_obj, 'name'):
                 file_path = file_obj.name
+                logger.info(f"📂 GRADIO DEBUG: Processing file at path: {file_path}")
             else:
                 # Handle case where file_obj is just the content
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.vtt', delete=False) as tmp_file:
@@ -66,18 +63,27 @@ def create_gradio_interface(config: Config) -> gr.Interface:
                     else:
                         tmp_file.write(file_obj.read())
                     file_path = tmp_file.name
+                logger.info(f"📂 GRADIO DEBUG: Created temporary file at: {file_path}")
             
-            # Process the file
-            result = summarizer.summarize_vtt_file(file_path)
+            # Process the file with the provided configuration
+            logger.info("🚀 GRADIO DEBUG: Calling summarizer with configuration from UI")
+            result = summarizer.summarize_vtt_file(
+                file_path, 
+                chunk_size=chunk_size, 
+                chunk_overlap=chunk_overlap, 
+                temperature=temperature
+            )
             
             # Clean up temporary file if created
             if hasattr(file_obj, 'name') and file_path != file_obj.name:
                 try:
                     os.unlink(file_path)
+                    logger.info("🧹 GRADIO DEBUG: Cleaned up temporary file")
                 except:
                     pass
             
             if result.error:
+                logger.error(f"❌ GRADIO DEBUG: Summarization error: {result.error}")
                 return "", "", f"❌ Error: {result.error}"
             
             # Format statistics
@@ -85,10 +91,12 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             
             # Success message
             status_msg = f"✅ Summary generated successfully! Processed {result.chunks_processed} chunks in {result.processing_time:.2f} seconds."
+            logger.info(f"✅ GRADIO DEBUG: Processing completed successfully - {status_msg}")
             
             return result.summary, stats, status_msg
             
         except Exception as e:
+            logger.error(f"❌ GRADIO DEBUG: Exception in process_vtt_file: {str(e)}")
             return "", "", f"❌ Error processing file: {str(e)}"
     
     def check_system_health() -> str:
