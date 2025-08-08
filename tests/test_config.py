@@ -30,6 +30,7 @@ def test_env_loading():
     print(f"  GRADIO_PORT: {config.gradio_port}")
     print(f"  MAX_CONCURRENT_REQUESTS: {config.max_concurrent_requests}")
     print(f"  REQUEST_TIMEOUT: {config.request_timeout}")
+    print(f"  LOG_LEVEL: {config.log_level}")
     
     # Check if values match what we set in .env
     expected_values = {
@@ -38,7 +39,8 @@ def test_env_loading():
         'temperature': 0.6,
         'gradio_port': 7862,
         'max_concurrent_requests': 5,
-        'request_timeout': 400
+        'request_timeout': 400,
+        'log_level': 'DEBUG'  # Add expected log level
     }
     
     print("\n🔍 Verification:")
@@ -55,7 +57,7 @@ def test_env_loading():
     # Also check environment variables directly
     print("\n🌍 Environment Variables:")
     env_vars = ['OLLAMA_BASE_URL', 'MODEL_NAME', 'CHUNK_SIZE', 'CHUNK_OVERLAP', 
-                'TEMPERATURE', 'GRADIO_PORT', 'MAX_CONCURRENT_REQUESTS', 'REQUEST_TIMEOUT']
+                'TEMPERATURE', 'GRADIO_PORT', 'MAX_CONCURRENT_REQUESTS', 'REQUEST_TIMEOUT', 'LOG_LEVEL']
     
     for var in env_vars:
         value = os.getenv(var, 'Not set')
@@ -85,6 +87,7 @@ def test_config_types():
     assert isinstance(config.gradio_port, int)
     assert isinstance(config.max_concurrent_requests, int)
     assert isinstance(config.request_timeout, int)
+    assert isinstance(config.log_level, str)
 
 if __name__ == "__main__":
     test_env_loading()

@@ -62,6 +62,13 @@ class Config(BaseSettings):
         description="Temperature for text generation"
     )
     
+    # Logging Configuration
+    log_level: str = Field(
+        default="INFO",
+        env="LOG_LEVEL",
+        description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)"
+    )
+    
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

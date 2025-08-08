@@ -14,8 +14,10 @@ from ..core.chunker import TextChunker, TextChunk
 from ..services.ollama_service import OllamaService, OllamaResponse
 from ..utils.config import Config
 
-# Set up logging for debugging
-logging.basicConfig(level=logging.DEBUG)
+# Set up logging for debugging using config
+config_instance = Config()
+log_level = getattr(logging, config_instance.log_level.upper(), logging.INFO)
+logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
 
 class SummarizationState(TypedDict):
