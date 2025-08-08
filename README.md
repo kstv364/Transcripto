@@ -1,4 +1,4 @@
-# Transcript Summarizer
+# Transcript Summarizer using Langgraph and Llama3
 
 A scalable transcript summarizer application built with Python, Ollama API, LLaMA3, LangChain, and Gradio. This application can handle long transcriptions that exceed the context window by chunking and processing them efficiently.
 
