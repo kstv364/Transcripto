@@ -57,6 +57,10 @@ class VTTParser:
         Returns:
             List of TranscriptSegment objects
         """
+        # Handle empty content gracefully
+        if not vtt_content or not vtt_content.strip():
+            return []
+            
         try:
             # Write content to a temporary file and parse it
             import tempfile

@@ -122,6 +122,8 @@ class OllamaService:
             raise Exception(f"Error communicating with Ollama: {str(e)}")
         except json.JSONDecodeError as e:
             raise Exception(f"Error parsing Ollama response: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Error communicating with Ollama: {str(e)}")
     
     async def generate_async(self, prompt: str, temperature: float = 0.3, system_prompt: Optional[str] = None) -> OllamaResponse:
         """
