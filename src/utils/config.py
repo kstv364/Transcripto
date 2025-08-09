@@ -9,6 +9,13 @@ except ImportError:
 class Config(BaseSettings):
     """Configuration management for the transcript summarizer application."""
     
+    # Provider Configuration
+    llm_provider: str = Field(
+        default="ollama",
+        env="LLM_PROVIDER",
+        description="LLM provider to use (e.g., 'ollama', 'gemini')"
+    )
+
     # Ollama Configuration
     ollama_base_url: str = Field(
         default="http://localhost:11434",
@@ -16,10 +23,23 @@ class Config(BaseSettings):
         description="Base URL for Ollama API"
     )
     
-    model_name: str = Field(
-        default="llama3",
-        env="MODEL_NAME",
-        description="Name of the LLaMA model to use"
+    ollama_model_name: str = Field(
+        default="llama3.1:8b",
+        env="OLLAMA_MODEL_NAME",
+        description="Name of the Ollama model to use"
+    )
+
+    # Gemini Configuration
+    gemini_api_key: Optional[str] = Field(
+        default=None,
+        env="GEMINI_API_KEY",
+        description="API key for Google Gemini"
+    )
+
+    gemini_model_name: str = Field(
+        default="gemini-2.5-flash",
+        env="GEMINI_MODEL_NAME",
+        description="Name of the Gemini model to use"
     )
     
     # Chunking Configuration

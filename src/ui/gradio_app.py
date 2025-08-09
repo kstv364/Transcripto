@@ -7,6 +7,8 @@ import json
 
 from ..core.summarizer import TranscriptSummarizer, SummarizationResult
 from ..utils.config import Config
+from ..services.ollama_service import OllamaService # For Ollama-specific health check info
+from ..services.gemini_service import GeminiService # For Gemini-specific health check info
 
 # Set up logging for debugging using config
 config_instance = Config()
@@ -108,18 +110,21 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             
             status_lines = ["## System Health Check", ""]
             
-            # Ollama connection
-            if health["ollama_connection"]:
-                status_lines.append("✅ Ollama connection: OK")
+            # Connection status
+            if health["connection_ok"]:
+                status_lines.append(f"✅ Connection to {health['llm_provider'].capitalize()}: OK")
             else:
-                status_lines.append("❌ Ollama connection: FAILED")
+                status_lines.append(f"❌ Connection to {health['llm_provider'].capitalize()}: FAILED")
             
             # Model availability
             if health["model_available"]:
-                status_lines.append(f"✅ Model '{config.model_name}': Available")
+                status_lines.append(f"✅ Model '{health['model_info'].get('name', 'N/A')}': Available")
             else:
-                status_lines.append(f"❌ Model '{config.model_name}': Not available")
-                status_lines.append("   💡 Try running: `ollama pull llama3`")
+                status_lines.append(f"❌ Model '{health['model_info'].get('name', 'N/A')}': Not available")
+                if health['llm_provider'] == 'ollama':
+                    status_lines.append(f"   💡 Try running: `ollama pull {config.ollama_model_name}`")
+                elif health['llm_provider'] == 'gemini':
+                    status_lines.append(f"   💡 Ensure GEMINI_API_KEY is set and model '{config.gemini_model_name}' is accessible.")
             
             # Model info
             model_info = health.get("model_info", {})
@@ -127,17 +132,29 @@ def create_gradio_interface(config: Config) -> gr.Interface:
                 status_lines.extend([
                     "",
                     "### Model Information:",
-                    f"- Model: {model_info.get('details', {}).get('family', 'N/A')}",
-                    f"- Parameters: {model_info.get('details', {}).get('parameter_size', 'N/A')}",
-                    f"- Format: {model_info.get('details', {}).get('format', 'N/A')}"
+                    f"- Provider: {health['llm_provider'].capitalize()}",
+                    f"- Model Name: {model_info.get('name', 'N/A')}",
                 ])
+                if health['llm_provider'] == 'ollama':
+                    status_lines.extend([
+                        f"- Family: {model_info.get('details', {}).get('family', 'N/A')}",
+                        f"- Parameters: {model_info.get('details', {}).get('parameter_size', 'N/A')}",
+                        f"- Format: {model_info.get('details', {}).get('format', 'N/A')}"
+                    ])
+                elif health['llm_provider'] == 'gemini':
+                    status_lines.extend([
+                        f"- Version: {model_info.get('version', 'N/A')}",
+                        f"- Supported Methods: {', '.join(model_info.get('supported_generation_methods', ['N/A']))}"
+                    ])
             
             # Configuration
             status_lines.extend([
                 "",
                 "### Configuration:",
+                f"- LLM Provider: {config.llm_provider}",
                 f"- Ollama URL: {config.ollama_base_url}",
-                f"- Model: {config.model_name}",
+                f"- Ollama Model: {config.ollama_model_name}",
+                f"- Gemini Model: {config.gemini_model_name}",
                 f"- Chunk Size: {config.chunk_size} tokens",
                 f"- Chunk Overlap: {config.chunk_overlap} tokens",
                 f"- Temperature: {config.temperature}"
@@ -146,6 +163,7 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             return "\n".join(status_lines)
             
         except Exception as e:
+            logger.error(f"❌ Health check failed: {str(e)}")
             return f"❌ Health check failed: {str(e)}"
     
     def format_statistics(result: SummarizationResult) -> str:
@@ -196,7 +214,7 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             """
             # 🎯 Transcript Summarizer
             
-            Upload your VTT transcript files and get AI-powered summaries using LLaMA3 via Ollama.
+            Upload your VTT transcript files and get AI-powered summaries using your chosen LLM provider (Ollama or Gemini).
             Handles long transcripts automatically with intelligent chunking.
             """,
             elem_classes=["main-header"]
@@ -215,6 +233,13 @@ def create_gradio_interface(config: Config) -> gr.Interface:
                 
                 # Configuration section
                 gr.Markdown("## ⚙️ Configuration")
+
+                llm_provider_input = gr.Radio(
+                    ["ollama", "gemini"],
+                    label="LLM Provider",
+                    value=config.llm_provider,
+                    info="Choose your LLM provider"
+                )
                 
                 with gr.Row():
                     chunk_size_input = gr.Slider(
@@ -325,6 +350,13 @@ def create_gradio_interface(config: Config) -> gr.Interface:
         interface.load(
             fn=check_system_health,
             outputs=[health_output]
+        )
+
+        # Update summarizer config when LLM provider changes
+        llm_provider_input.change(
+            fn=lambda provider: summarizer._initialize_llm_service(Config(llm_provider=provider)),
+            inputs=[llm_provider_input],
+            outputs=[]
         )
     
     return interface

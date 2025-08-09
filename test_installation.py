@@ -45,14 +45,14 @@ def test_ollama_connection():
         if response.status_code == 200:
             print("  ✅ Ollama is running and accessible")
             
-            # Check for llama3 model
+            # Check for llama3.1:8b model
             models = response.json().get('models', [])
-            llama3_available = any('llama3' in model.get('name', '') for model in models)
+            llama3_available = any('llama3.1:8b' in model.get('name', '') for model in models)
             
             if llama3_available:
                 print("  ✅ LLaMA3 model is available")
             else:
-                print("  ⚠️  LLaMA3 model not found. Run: ollama pull llama3")
+                print("  ⚠️  LLaMA3 model not found. Run: ollama pull llama3.1:8b")
                 
         else:
             print(f"  ❌ Ollama responded with status code: {response.status_code}")

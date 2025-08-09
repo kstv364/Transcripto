@@ -59,7 +59,7 @@ curl -s http://localhost:11434/api/tags >nul 2>&1
 if errorlevel 1 (
     echo ❌ Ollama is not running
     echo Please start Ollama with: ollama serve
-    echo Then pull the model with: ollama pull llama3
+    echo Then pull the model with: ollama pull llama3.1:8b
 ) else (
     echo ✅ Ollama is running
 )
@@ -77,7 +77,7 @@ echo ========================================
 echo.
 echo To start the application:
 echo 1. Make sure Ollama is running: ollama serve
-echo 2. Make sure LLaMA3 is installed: ollama pull llama3
+echo 2. Make sure LLaMA3 is installed: ollama pull llama3.1:8b
 echo 3. Run: python main.py
 echo 4. Open http://localhost:7860 in your browser
 echo.

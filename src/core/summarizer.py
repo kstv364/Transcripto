@@ -12,6 +12,7 @@ from langgraph.graph import StateGraph, START, END
 from ..core.vtt_parser import VTTParser, TranscriptSegment
 from ..core.chunker import TextChunker, TextChunk
 from ..services.ollama_service import OllamaService, OllamaResponse
+from ..services.gemini_service import GeminiService, GeminiResponse
 from ..utils.config import Config
 
 # Set up logging for debugging using config
@@ -57,14 +58,12 @@ class TranscriptSummarizer:
         logger.info(f"📊 Initial Config - Temperature: {config.temperature}")
         logger.info(f"📊 Initial Config - Chunk Size: {config.chunk_size}")
         logger.info(f"📊 Initial Config - Chunk Overlap: {config.chunk_overlap}")
-        logger.info(f"📊 Initial Config - Model: {config.model_name}")
+        logger.info(f"📊 Initial Config - LLM Provider: {config.llm_provider}")
         logger.info(f"📊 Initial Config - Ollama URL: {config.ollama_base_url}")
+        logger.info(f"📊 Initial Config - Ollama Model: {config.ollama_model_name}")
+        logger.info(f"📊 Initial Config - Gemini Model: {config.gemini_model_name}")
         
-        self.ollama_service = OllamaService(
-            base_url=config.ollama_base_url,
-            model=config.model_name,
-            timeout=config.request_timeout
-        )
+        self.llm_service = self._initialize_llm_service(config)
         self.chunker = TextChunker(
             chunk_size=config.chunk_size,
             overlap_size=config.chunk_overlap
@@ -72,6 +71,27 @@ class TranscriptSummarizer:
         self.vtt_parser = VTTParser()
         self.workflow = self._create_workflow()
     
+    def _initialize_llm_service(self, config: Config):
+        """Initialize the appropriate LLM service based on configuration."""
+        if config.llm_provider == "ollama":
+            logger.info(f"Initializing OllamaService with base_url={config.ollama_base_url}, model={config.ollama_model_name}")
+            return OllamaService(
+                base_url=config.ollama_base_url,
+                model=config.ollama_model_name,
+                timeout=config.request_timeout
+            )
+        elif config.llm_provider == "gemini":
+            if not config.gemini_api_key:
+                raise ValueError("GEMINI_API_KEY must be set in .env for Gemini provider.")
+            logger.info(f"Initializing GeminiService with model={config.gemini_model_name}")
+            return GeminiService(
+                api_key=config.gemini_api_key,
+                model=config.gemini_model_name,
+                timeout=config.request_timeout
+            )
+        else:
+            raise ValueError(f"Unsupported LLM provider: {config.llm_provider}")
+
     def update_config(self, chunk_size: int, chunk_overlap: int, temperature: float):
         """
         Update configuration and recreate necessary components.
@@ -101,6 +121,8 @@ class TranscriptSummarizer:
             overlap_size=chunk_overlap
         )
         logger.info("🔄 CONFIG UPDATE DEBUG: Chunker recreated with new settings")
+        # Re-initialize LLM service if model name or provider changes (not handled by this update_config)
+        # For now, assume model/provider changes require full re-initialization of Summarizer
     
     def _create_workflow(self):
         """Create the LangGraph workflow for summarization."""
@@ -124,7 +146,8 @@ class TranscriptSummarizer:
                 "temperature": self.config.temperature,
                 "chunk_size": self.config.chunk_size,
                 "chunk_overlap": self.config.chunk_overlap,
-                "model_name": self.config.model_name
+                "llm_provider": self.config.llm_provider,
+                "model_name": self.config.ollama_model_name if self.config.llm_provider == "ollama" else self.config.gemini_model_name
             }
             
             logger.info(f"🐛 WORKFLOW DEBUG: Configuration in parse_input - {debug_config}")
@@ -195,7 +218,7 @@ class TranscriptSummarizer:
                     logger.info(f"📄 PROMPT DEBUG: Created prompt for chunk {i+1}, prompt length: {len(prompt)} chars")
                 
                 # Log temperature being used
-                logger.info(f"🌡️ TEMPERATURE DEBUG: About to call Ollama with temperature={self.config.temperature}")
+                logger.info(f"🌡️ TEMPERATURE DEBUG: About to call LLM service with temperature={self.config.temperature}")
                 
                 # Process chunks asynchronously
                 chunk_summaries = asyncio.run(self._process_chunks_async(chunk_prompts))
@@ -233,10 +256,10 @@ class TranscriptSummarizer:
                 logger.info(f"📄 FINAL PROMPT DEBUG: Final prompt length: {len(final_prompt)} chars")
                 
                 # Log temperature being used
-                logger.info(f"🌡️ FINAL TEMPERATURE DEBUG: About to call Ollama with temperature={self.config.temperature}")
+                logger.info(f"🌡️ FINAL TEMPERATURE DEBUG: About to call LLM service with temperature={self.config.temperature}")
                 
                 # Generate final summary
-                response = self.ollama_service.generate_sync(
+                response = self.llm_service.generate_sync(
                     prompt=final_prompt,
                     temperature=self.config.temperature
                 )
@@ -291,8 +314,8 @@ class TranscriptSummarizer:
         logger.info(f"🔄 ASYNC DEBUG: Processing {len(prompts)} chunks asynchronously")
         logger.info(f"🌡️ ASYNC TEMPERATURE DEBUG: Using temperature={self.config.temperature}")
         
-        async with self.ollama_service:
-            responses = await self.ollama_service.generate_multiple_async(
+        async with self.llm_service:
+            responses = await self.llm_service.generate_multiple_async(
                 prompts, 
                 temperature=self.config.temperature
             )
@@ -475,13 +498,14 @@ Please provide a comprehensive final summary:"""
     
     def check_service_health(self) -> Dict[str, Any]:
         """
-        Check the health of the Ollama service and model availability.
+        Check the health of the current LLM service and model availability.
         
         Returns:
             Health check results
         """
         health_status = {
-            "ollama_connection": False,
+            "llm_provider": self.config.llm_provider,
+            "connection_ok": False,
             "model_available": False,
             "model_info": {},
             "timestamp": time.time()
@@ -489,14 +513,14 @@ Please provide a comprehensive final summary:"""
         
         try:
             # Test connection
-            health_status["ollama_connection"] = self.ollama_service.test_connection()
+            health_status["connection_ok"] = self.llm_service.test_connection()
             
-            if health_status["ollama_connection"]:
+            if health_status["connection_ok"]:
                 # Check model availability
-                health_status["model_available"] = self.ollama_service.check_model_availability()
+                health_status["model_available"] = self.llm_service.check_model_availability()
                 
                 # Get model info
-                health_status["model_info"] = self.ollama_service.get_model_info()
+                health_status["model_info"] = self.llm_service.get_model_info()
         
         except Exception as e:
             health_status["error"] = str(e)

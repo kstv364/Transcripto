@@ -70,7 +70,7 @@ def test_config_defaults():
     
     # Test that we get some expected default values
     assert config.ollama_base_url == "http://localhost:11434"
-    assert config.model_name == "llama3"
+    assert config.model_name == "llama3.1:8b"
     assert isinstance(config.temperature, float)
     assert isinstance(config.chunk_size, int)
     assert isinstance(config.chunk_overlap, int)
