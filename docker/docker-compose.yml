@@ -31,7 +31,7 @@ services:
       - "7860:7860"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - MODEL_NAME=llama3
+      - MODEL_NAME=llama3.1:8b
       - CHUNK_SIZE=2000
       - CHUNK_OVERLAP=200
       - TEMPERATURE=0.3
@@ -49,7 +49,7 @@ services:
     networks:
       - transcript-network
 
-  # Model initialization service (runs once to pull llama3)
+  # Model initialization service (runs once to pull llama3.1:8b)
   model-init:
     image: ollama/ollama:latest
     container_name: transcript-model-init
@@ -64,8 +64,8 @@ services:
       sh -c "
         echo 'Waiting for Ollama service...';
         sleep 10;
-        echo 'Pulling llama3 model...';
-        ollama pull llama3;
+        echo 'Pulling llama3.1:8b model...';
+        ollama pull llama3.1:8b;
         echo 'Model initialization complete!';
       "
     networks:

@@ -97,7 +97,7 @@ transcripter/
 4. **Ensure Ollama is running with LLaMA3:**
    ```bash
    ollama serve
-   ollama pull llama3
+   ollama pull llama3.1:8b
    ```
 
 5. **Run the application:**
@@ -130,7 +130,7 @@ transcripter/
 The application can be configured through environment variables or by creating a `.env` file in the project root:
 
 - `OLLAMA_BASE_URL`: Ollama API base URL (default: http://localhost:11434)
-- `MODEL_NAME`: LLaMA model name (default: llama3)
+- `MODEL_NAME`: LLaMA model name (default: llama3.1:8b)
 - `CHUNK_SIZE`: Maximum tokens per chunk (default: 2000)
 - `CHUNK_OVERLAP`: Token overlap between chunks (default: 200)
 - `GRADIO_PORT`: Gradio server port (default: 7860)
@@ -150,7 +150,7 @@ Then edit `.env` with your preferred settings:
 ```env
 # Example .env configuration
 OLLAMA_BASE_URL=http://localhost:11434
-MODEL_NAME=llama3
+MODEL_NAME=llama3.1:8b
 CHUNK_SIZE=2000
 CHUNK_OVERLAP=200
 TEMPERATURE=0.3
@@ -207,7 +207,7 @@ mypy src/
 **Solution:**
 - Ensure Ollama is running: `ollama serve`
 - Check if the model is available: `ollama list`
-- Pull the model if missing: `ollama pull llama3`
+- Pull the model if missing: `ollama pull llama3.1:8b`
 - Verify the URL in your .env file: `OLLAMA_BASE_URL=http://localhost:11434`
 
 #### 3. LangGraph Import Errors

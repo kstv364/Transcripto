@@ -24,7 +24,7 @@ Before starting, make sure you have:
    ollama serve
    
    # In a new terminal, pull the model
-   ollama pull llama3
+   ollama pull llama3.1:8b
    ```
 
 ### Step 2: Set Up the Application
@@ -158,8 +158,8 @@ Thank you for your attention. Let's now open the floor for questions.
    - Make sure Ollama is running: `ollama serve`
    - Check if the service is accessible: `curl http://localhost:11434/api/tags`
 
-2. **"Model 'llama3': Not available"**:
-   - Pull the model: `ollama pull llama3`
+2. **"Model 'llama3.1:8b': Not available"**:
+   - Pull the model: `ollama pull llama3.1:8b`
    - Wait for download to complete (can be large)
 
 3. **Application won't start**:

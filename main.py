@@ -9,9 +9,14 @@ def main():
     config = Config()
     
     print("🚀 Starting Transcript Summarizer...")
-    print(f"📡 Ollama URL: {config.ollama_base_url}")
-    print(f"🤖 Model: {config.model_name}")
-    print(f"🌐 Port: {config.gradio_port}")
+    print(f"✨ LLM Provider: {config.llm_provider.capitalize()}")
+    if config.llm_provider == "ollama":
+        print(f"📡 Ollama URL: {config.ollama_base_url}")
+        print(f"🤖 Ollama Model: {config.ollama_model_name}")
+    elif config.llm_provider == "gemini":
+        print(f"🔑 Gemini API Key: {'Set' if config.gemini_api_key else 'Not Set'}")
+        print(f"🤖 Gemini Model: {config.gemini_model_name}")
+    print(f"🌐 Gradio Port: {config.gradio_port}")
     
     # Create and launch Gradio interface
     interface = create_gradio_interface(config)

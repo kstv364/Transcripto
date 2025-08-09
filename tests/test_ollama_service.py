@@ -9,7 +9,7 @@ class TestOllamaService:
         """Set up test fixtures."""
         self.service = OllamaService(
             base_url="http://localhost:11434",
-            model="llama3",
+            model="llama3.1:8b",
             timeout=30
         )
     
@@ -38,7 +38,7 @@ class TestOllamaService:
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "models": [
-                {"name": "llama3:latest"},
+                {"name": "llama3.1:8b:latest"},
                 {"name": "other-model:latest"}
             ]
         }
@@ -54,7 +54,7 @@ class TestOllamaService:
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "response": "This is a test response",
-            "model": "llama3",
+            "model": "llama3.1:8b",
             "total_duration": 1000000,
             "eval_count": 10
         }
@@ -64,7 +64,7 @@ class TestOllamaService:
         
         assert isinstance(result, OllamaResponse)
         assert result.content == "This is a test response"
-        assert result.model == "llama3"
+        assert result.model == "llama3.1:8b"
     
     @patch('src.services.ollama_service.requests.post')
     def test_generate_sync_failure(self, mock_post):
