@@ -22,8 +22,11 @@ def test_env_loading():
     config = Config()
     
     print("\n📊 Configuration Values:")
+    print(f"  LLM_PROVIDER: {config.llm_provider}")
     print(f"  OLLAMA_BASE_URL: {config.ollama_base_url}")
-    print(f"  MODEL_NAME: {config.model_name}")
+    print(f"  OLLAMA_MODEL_NAME: {config.ollama_model_name}")
+    print(f"  GEMINI_API_KEY: {'Set' if config.gemini_api_key else 'Not Set'}")
+    print(f"  GEMINI_MODEL_NAME: {config.gemini_model_name}")
     print(f"  CHUNK_SIZE: {config.chunk_size}")
     print(f"  CHUNK_OVERLAP: {config.chunk_overlap}")
     print(f"  TEMPERATURE: {config.temperature}")
@@ -56,8 +59,9 @@ def test_env_loading():
     
     # Also check environment variables directly
     print("\n🌍 Environment Variables:")
-    env_vars = ['OLLAMA_BASE_URL', 'MODEL_NAME', 'CHUNK_SIZE', 'CHUNK_OVERLAP', 
-                'TEMPERATURE', 'GRADIO_PORT', 'MAX_CONCURRENT_REQUESTS', 'REQUEST_TIMEOUT', 'LOG_LEVEL']
+    env_vars = ['LLM_PROVIDER', 'OLLAMA_BASE_URL', 'OLLAMA_MODEL_NAME', 'GEMINI_API_KEY', 'GEMINI_MODEL_NAME',
+                'CHUNK_SIZE', 'CHUNK_OVERLAP', 'TEMPERATURE', 'GRADIO_PORT', 
+                'MAX_CONCURRENT_REQUESTS', 'REQUEST_TIMEOUT', 'LOG_LEVEL']
     
     for var in env_vars:
         value = os.getenv(var, 'Not set')
@@ -69,8 +73,11 @@ def test_config_defaults():
     config = Config()
     
     # Test that we get some expected default values
+    assert config.llm_provider == "ollama"
     assert config.ollama_base_url == "http://localhost:11434"
-    assert config.model_name == "llama3.1:8b"
+    assert config.ollama_model_name == "llama3.1:8b"
+    assert config.gemini_api_key is None
+    assert config.gemini_model_name == "gemini-2.5-flash"
     assert isinstance(config.temperature, float)
     assert isinstance(config.chunk_size, int)
     assert isinstance(config.chunk_overlap, int)
@@ -79,8 +86,11 @@ def test_config_types():
     """Test that config values have correct types."""
     config = Config()
     
+    assert isinstance(config.llm_provider, str)
     assert isinstance(config.ollama_base_url, str)
-    assert isinstance(config.model_name, str)
+    assert isinstance(config.ollama_model_name, str)
+    assert isinstance(config.gemini_api_key, (str, type(None)))
+    assert isinstance(config.gemini_model_name, str)
     assert isinstance(config.chunk_size, int)
     assert isinstance(config.chunk_overlap, int)
     assert isinstance(config.temperature, float)
