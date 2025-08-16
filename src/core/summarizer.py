@@ -272,7 +272,10 @@ class TranscriptSummarizer:
                 output_dir = "output"
                 import os
                 os.makedirs(output_dir, exist_ok=True)
-                output_file = os.path.join(output_dir, f"final_summary-{str(uuid4())}.md")
+                
+                # output with timestamp
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                output_file = os.path.join(output_dir, f"final_summary_{timestamp}.md")                
                 with open(output_file, "w", encoding="utf-8") as f:
                     f.write(final_summary)
                 
@@ -352,19 +355,20 @@ Summary:"""
 
     def _create_final_summary_prompt(self, combined_summaries: str) -> str:
         """Create a prompt for the final summary."""
-        return f"""You are an expert at creating comprehensive summaries from multiple related text segments. Below are summaries of different parts of a transcript. Please create a final, cohesive summary that:
+        return f"""You are an expert at creating comprehensive summaries from multiple related text segments. Below are summaries of different parts of a transcript. Please create a final, cohesive, exam-ready study guide that:
 
-1. Integrates all the key information from the segments
-2. Maintains logical flow and structure
-3. Eliminates redundancy while preserving important details
-4. Provides a clear overview of the main topics and conclusions
-5. Uses professional, clear language
-6. Organizes information in a helpful way for the reader
+1.  **Covers all key points and concepts** from the transcript.
+2.  **Maintains logical flow and structure**, making it easy to study.
+3.  **Eliminates redundancy** while preserving important details.
+4.  **Provides a clear overview** of the main topics and conclusions.
+5.  **Uses professional, clear language** suitable for an academic context.
+6.  **Organizes information in a helpful way** for the reader, using headings, bullet points, and bold text for emphasis.
+7.  **Includes mathematical examples in tabular form** where applicable, ensuring they are clear and easy to understand without needing to refer back to the original video or text. The tables should have clear headers and values.
 
 Segment summaries:
 {combined_summaries}
 
-Please provide a comprehensive final summary:"""
+Please provide a comprehensive, exam-ready study guide:"""
 
     async def summarize_vtt_file(self, file_path: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """

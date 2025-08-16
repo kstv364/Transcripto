@@ -107,7 +107,7 @@ class GeminiService:
         try:
             generation_config = {
                 "temperature": temperature,
-                "max_output_tokens": 5000 # A reasonable default for summarization
+                "max_output_tokens": 8000 # A reasonable default for summarization
             }
             
             contents = []

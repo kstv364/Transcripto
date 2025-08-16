@@ -148,3 +148,4 @@ flagged/
 *.vtt
 uploads/
 logs/
+*.md
