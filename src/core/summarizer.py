@@ -4,6 +4,7 @@ from typing import List, Dict, Any, Optional, TypedDict
 from dataclasses import dataclass
 import time
 from concurrent.futures import ThreadPoolExecutor
+from uuid import uuid4
 
 from langchain_core.documents import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -193,7 +194,7 @@ class TranscriptSummarizer:
                 logger.error(f"❌ CHUNKER DEBUG: Error in chunking - {str(e)}")
                 return {**state, "error": f"Error chunking text: {str(e)}"}
         
-        def summarize_chunks(state: SummarizationState) -> SummarizationState:
+        async def summarize_chunks(state: SummarizationState) -> SummarizationState:
             """Summarize individual chunks."""
             logger.info("📝 WORKFLOW DEBUG: Starting summarize_chunks node")
             debug_config = state.get("debug_config", {})
@@ -221,7 +222,7 @@ class TranscriptSummarizer:
                 logger.info(f"🌡️ TEMPERATURE DEBUG: About to call LLM service with temperature={self.config.temperature}")
                 
                 # Process chunks asynchronously
-                chunk_summaries = asyncio.run(self._process_chunks_async(chunk_prompts))
+                chunk_summaries = await self._process_chunks_async(chunk_prompts)
                 
                 # Log results
                 for i, summary in enumerate(chunk_summaries):
@@ -261,12 +262,19 @@ class TranscriptSummarizer:
                 # Generate final summary
                 response = self.llm_service.generate_sync(
                     prompt=final_prompt,
-                    temperature=self.config.temperature
+                    temperature=self.config.temperature,
                 )
                 
                 final_summary = response.content.strip()
                 logger.info(f"📄 FINAL RESULT DEBUG: Final summary length: {len(final_summary)} chars")
-                logger.info(f"📄 FINAL RESULT DEBUG: First 200 chars: {final_summary[:200]}...")
+                logger.info(f"📄 FINAL RESULT DEBUG: First 200 chars: {final_summary}...")
+                
+                output_dir = "output"
+                import os
+                os.makedirs(output_dir, exist_ok=True)
+                output_file = os.path.join(output_dir, f"final_summary-{str(uuid4())}.md")
+                with open(output_file, "w", encoding="utf-8") as f:
+                    f.write(final_summary)
                 
                 # Update processing stats
                 processing_stats = state.get("processing_stats", {})
@@ -358,7 +366,7 @@ Segment summaries:
 
 Please provide a comprehensive final summary:"""
 
-    def summarize_vtt_file(self, file_path: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_vtt_file(self, file_path: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize a VTT file.
         
@@ -378,7 +386,7 @@ Please provide a comprehensive final summary:"""
             full_text = self.vtt_parser.get_full_transcript()
             logger.info(f"📄 VTT FILE DEBUG: Extracted {len(segments)} segments, {len(full_text)} chars total")
             
-            return self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
+            return await self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
             
         except Exception as e:
             logger.error(f"❌ VTT FILE DEBUG: Error processing VTT file - {str(e)}")
@@ -392,7 +400,7 @@ Please provide a comprehensive final summary:"""
                 error=str(e)
             )
     
-    def summarize_vtt_content(self, vtt_content: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_vtt_content(self, vtt_content: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize VTT content from a string.
         
@@ -412,7 +420,7 @@ Please provide a comprehensive final summary:"""
             full_text = self.vtt_parser.get_full_transcript()
             logger.info(f"📄 VTT CONTENT DEBUG: Extracted {len(segments)} segments, {len(full_text)} chars total")
             
-            return self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
+            return await self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
             
         except Exception as e:
             logger.error(f"❌ VTT CONTENT DEBUG: Error processing VTT content - {str(e)}")
@@ -426,7 +434,7 @@ Please provide a comprehensive final summary:"""
                 error=str(e)
             )
     
-    def summarize_text(self, text: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_text(self, text: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize plain text.
         
@@ -465,7 +473,7 @@ Please provide a comprehensive final summary:"""
         
         # Run the workflow
         logger.info("🎬 SUMMARIZE DEBUG: Starting LangGraph workflow")
-        result_state = self.workflow.invoke(initial_state)
+        result_state = await self.workflow.ainvoke(initial_state)
         logger.info("🏁 SUMMARIZE DEBUG: LangGraph workflow completed")
         
         # Create result object

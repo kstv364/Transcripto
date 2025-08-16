@@ -30,7 +30,7 @@ def create_gradio_interface(config: Config) -> gr.Interface:
     # Initialize the summarizer
     summarizer = TranscriptSummarizer(config)
     
-    def process_vtt_file(
+    async def process_vtt_file(
         file_obj,
         chunk_size: int,
         chunk_overlap: int,
@@ -71,7 +71,7 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             
             # Process the file with the provided configuration
             logger.info("🚀 GRADIO DEBUG: Calling summarizer with configuration from UI")
-            result = summarizer.summarize_vtt_file(
+            result = await summarizer.summarize_vtt_file(
                 file_path, 
                 chunk_size=chunk_size, 
                 chunk_overlap=chunk_overlap, 
