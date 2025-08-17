@@ -1,5 +1,7 @@
 # Transcript Summarizer using Langgraph and Llama3
 
+🚀 **Live Deployment:** Access the application here: [Transcripto on Hugging Face Spaces](https://huggingface.co/spaces/kaustavchanda/Transcripto) 🔗
+
 A scalable transcript summarizer application built with Python, Ollama API, LLaMA3, LangChain, and Gradio. This application can handle long transcriptions that exceed the context window by chunking and processing them efficiently.
 
 ## Features
@@ -209,41 +211,6 @@ mypy src/
 - Check if the model is available: `ollama list`
 - Pull the model if missing: `ollama pull llama3.1:8b`
 - Verify the URL in your .env file: `OLLAMA_BASE_URL=http://localhost:11434`
-
-#### 3. LangGraph Import Errors
-**Problem:** ImportError related to LangGraph
-**Solution:**
-- Use the exact versions in requirements.txt
-- Reinstall: `pip uninstall langgraph langchain -y && pip install -r requirements.txt`
-
-#### 4. Gradio Interface Not Loading
-**Problem:** Web interface doesn't load
-**Solution:**
-- Check if port 7860 is available
-- Try a different port: set `GRADIO_PORT=7861` in your .env file
-- Check firewall settings
-
-#### 5. VTT File Processing Errors
-**Problem:** VTT files not parsing correctly
-**Solution:**
-- Ensure your VTT file follows the WebVTT standard
-- Check the sample file in `examples/sample_transcript.vtt`
-- Verify file encoding is UTF-8
-
-#### 6. Debugging and Logging Issues
-**Problem:** Need more detailed logs for troubleshooting
-**Solution:**
-- Set `LOG_LEVEL=DEBUG` in your .env file for detailed logging
-- Available log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
-- Check application logs for specific error messages
-- Use `LOG_LEVEL=ERROR` to reduce log verbosity in production
-
-### Getting Help
-- Check the system health in the web interface
-- Review logs for detailed error messages (set LOG_LEVEL=DEBUG for more details)
-- Ensure all dependencies are correctly installed
-- Verify Ollama is running and accessible
-- Test your configuration: `python tests/test_config.py`
 
 ## Contributing
 
