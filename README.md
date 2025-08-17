@@ -1,5 +1,9 @@
 # Transcript Summarizer using Langgraph and Llama3
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/kaustavchanda/Transcripto)
+
+
 🚀 **Live Deployment:** Access the application here: [Transcripto on Hugging Face Spaces](https://huggingface.co/spaces/kaustavchanda/Transcripto) 🔗
 
 A scalable transcript summarizer application built with Python, Ollama API, LLaMA3, LangChain, and Gradio. This application can handle long transcriptions that exceed the context window by chunking and processing them efficiently.
