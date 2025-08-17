@@ -186,44 +186,6 @@ To verify your environment configuration is working correctly:
 python -c "from src.utils.config import Config; c = Config(); print(f'Loaded config: {c.dict()}')"
 ```
 
-### Code Formatting
-```bash
-black src/
-isort src/
-```
-
-### Type Checking
-```bash
-mypy src/
-```
-
-## Troubleshooting
-
-### Common Issues
-
-#### 1. Package Installation Failures
-**Problem:** NumPy or other packages fail to compile on Windows
-**Solution:** 
-- Use the automated setup script (`setup.bat`) which handles this automatically
-- Or try the minimal requirements: `pip install -r requirements-minimal.txt`
-- Ensure you have the latest pip: `python -m pip install --upgrade pip`
-
-#### 2. Ollama Connection Issues
-**Problem:** "❌ Ollama connection: FAILED"
-**Solution:**
-- Ensure Ollama is running: `ollama serve`
-- Check if the model is available: `ollama list`
-- Pull the model if missing: `ollama pull llama3.1:8b`
-- Verify the URL in your .env file: `OLLAMA_BASE_URL=http://localhost:11434`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
 ## License
 
 MIT License
