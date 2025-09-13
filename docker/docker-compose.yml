@@ -32,8 +32,10 @@ services:
     env_file:
       - ../.env
     ports:
-      - 7861:7861
+      - 7861:7862
     restart: unless-stopped
+    volumes:
+      - ./output:/app/output
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7861/"]
       interval: 30s

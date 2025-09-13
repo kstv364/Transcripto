@@ -56,9 +56,11 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             logger.info(f"🔧 GRADIO CONFIG DEBUG: Received from UI - chunk_size={chunk_size}, chunk_overlap={chunk_overlap}, temperature={temperature}")
             
             # Read file content
+            original_file_name_base = "uploaded_transcript" # Default name
             if hasattr(file_obj, 'name'):
                 file_path = file_obj.name
-                logger.info(f"📂 GRADIO DEBUG: Processing file at path: {file_path}")
+                original_file_name_base = os.path.splitext(os.path.basename(file_path))[0]
+                logger.info(f"📂 GRADIO DEBUG: Processing file at path: {file_path}, base name: {original_file_name_base}")
             else:
                 # Handle case where file_obj is just the content
                 with tempfile.NamedTemporaryFile(mode='w', suffix='.vtt', delete=False) as tmp_file:
@@ -73,6 +75,7 @@ def create_gradio_interface(config: Config) -> gr.Interface:
             logger.info("🚀 GRADIO DEBUG: Calling summarizer with configuration from UI")
             result = await summarizer.summarize_vtt_file(
                 file_path, 
+                original_file_name_base=original_file_name_base,
                 chunk_size=chunk_size, 
                 chunk_overlap=chunk_overlap, 
                 temperature=temperature

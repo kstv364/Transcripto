@@ -32,6 +32,7 @@ class SummarizationState(TypedDict):
     error: Optional[str]
     # Add configuration tracking
     debug_config: Optional[Dict[str, Any]]
+    original_file_name_base: str # Add this to the state
 
 @dataclass
 class SummarizationResult:
@@ -273,9 +274,10 @@ class TranscriptSummarizer:
                 import os
                 os.makedirs(output_dir, exist_ok=True)
                 
-                # output with timestamp
+                # output with timestamp and original file name
+                original_file_name_base = state.get("original_file_name_base", "uploaded_transcript")
                 timestamp = time.strftime("%Y%m%d_%H%M%S")
-                output_file = os.path.join(output_dir, f"final_summary_{timestamp}.md")                
+                output_file = os.path.join(output_dir, f"{original_file_name_base}_summary_{timestamp}.md")                
                 with open(output_file, "w", encoding="utf-8") as f:
                     f.write(final_summary)
                 
@@ -370,7 +372,7 @@ Segment summaries:
 
 Please provide a comprehensive, exam-ready study guide:"""
 
-    async def summarize_vtt_file(self, file_path: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_vtt_file(self, file_path: str, original_file_name_base: str = "uploaded_transcript", chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize a VTT file.
         
@@ -390,7 +392,7 @@ Please provide a comprehensive, exam-ready study guide:"""
             full_text = self.vtt_parser.get_full_transcript()
             logger.info(f"📄 VTT FILE DEBUG: Extracted {len(segments)} segments, {len(full_text)} chars total")
             
-            return await self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
+            return await self.summarize_text(full_text, original_file_name_base, chunk_size, chunk_overlap, temperature)
             
         except Exception as e:
             logger.error(f"❌ VTT FILE DEBUG: Error processing VTT file - {str(e)}")
@@ -404,7 +406,7 @@ Please provide a comprehensive, exam-ready study guide:"""
                 error=str(e)
             )
     
-    async def summarize_vtt_content(self, vtt_content: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_vtt_content(self, vtt_content: str, original_file_name_base: str = "uploaded_transcript", chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize VTT content from a string.
         
@@ -424,7 +426,7 @@ Please provide a comprehensive, exam-ready study guide:"""
             full_text = self.vtt_parser.get_full_transcript()
             logger.info(f"📄 VTT CONTENT DEBUG: Extracted {len(segments)} segments, {len(full_text)} chars total")
             
-            return await self.summarize_text(full_text, chunk_size, chunk_overlap, temperature)
+            return await self.summarize_text(full_text, original_file_name_base, chunk_size, chunk_overlap, temperature)
             
         except Exception as e:
             logger.error(f"❌ VTT CONTENT DEBUG: Error processing VTT content - {str(e)}")
@@ -438,7 +440,7 @@ Please provide a comprehensive, exam-ready study guide:"""
                 error=str(e)
             )
     
-    async def summarize_text(self, text: str, chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
+    async def summarize_text(self, text: str, original_file_name_base: str = "uploaded_transcript", chunk_size: Optional[int] = None, chunk_overlap: Optional[int] = None, temperature: Optional[float] = None) -> SummarizationResult:
         """
         Summarize plain text.
         
@@ -472,7 +474,8 @@ Please provide a comprehensive, exam-ready study guide:"""
             "final_summary": "",
             "processing_stats": None,
             "error": None,
-            "debug_config": None
+            "debug_config": None,
+            "original_file_name_base": original_file_name_base
         }
         
         # Run the workflow

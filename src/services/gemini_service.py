@@ -221,7 +221,7 @@ class GeminiService:
             
             generation_config = {
                 "temperature": temperature,
-                "max_output_tokens": 2048
+                "max_output_tokens": 5120
             }
             
             tasks.append(self.model.generate_content_async(
